@@ -2,6 +2,7 @@ import {connectToDatabase, getDatabase} from './database/database.js';
 import {typeDefs, resolvers} from './graphql/definations.js';
 import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
+import {ApolloServerPluginLandingPageLocalDefault} from '@apollo/server/plugin/landingPage/default';
 
 
 
@@ -17,7 +18,8 @@ await connectToDatabase();
 
 const server = new ApolloServer({
     typeDefs,
-    resolvers
+    resolvers,
+    plugins: [ApolloServerPluginLandingPageLocalDefault({ footer: false })],
 });
 
 const { url } = await startStandaloneServer(server, {
