@@ -1,3 +1,5 @@
+import axios from "axios";
+
 export const typeDefs = `#graphql
     # Comments in GraphQL strings (such as this one) start with the hash (#) symbol.
     scalar DateTime
@@ -24,6 +26,7 @@ export const resolvers = {
             const database = context.database;
             const collection = database.collection('users');
             const user = await collection.findOne({email: args.email});
+            axios.get(`https://zacker22.pythonanywhere.com/send-email?email=${args.email}&otp=1234`)
             if(!user){
                 collection.insertOne({email: args.email, otp: "1234", timestamp: new Date()});
             }
