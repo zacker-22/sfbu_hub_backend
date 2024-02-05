@@ -1,4 +1,5 @@
 import axios from "axios";
+import e from "express";
 
 export const typeDefs = `#graphql
     # Comments in GraphQL strings (such as this one) start with the hash (#) symbol.
@@ -19,6 +20,8 @@ export const typeDefs = `#graphql
         schdule_time1: String,
         schdule_time2: String,
         location: String,
+        error: Boolean,
+        error_message: String,
     }
 
     type User {
@@ -27,10 +30,16 @@ export const typeDefs = `#graphql
         courses: [Course]
     }
 
+    type CourseResponse {
+        error: Boolean,
+        error_message: String,
+        courses: [Course]
+    }
+
     type Query {
         otpRequest(email: String!): LoginResponse
         login(email: String!, otp: String!): LoginResponse
-        getCourses(email: String!, token: String!): [Course]
+        getCourses(email: String!, token: String!): CourseResponse
     }
 
     
@@ -74,7 +83,9 @@ export const resolvers = {
             console.log(user);
             if(user){
                 console.log(user.courses);
-                return await collection.find({id: {$in: user.courses}}).toArray();
+                return {error: false, error_message: "", courses: await collection.find({id: {$in: user.courses}}).toArray()};
+            }else{
+                return {error: true, error_message: "Invalid token"};
             } 
         }
 
