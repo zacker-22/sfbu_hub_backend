@@ -11,9 +11,26 @@ export const typeDefs = `#graphql
         token: String
     }
 
+    type Course {
+        id: String,
+        name: String,
+        is_public: Boolean,
+        schdule_day: String,
+        schdule_time1: String,
+        schdule_time2: String,
+        location: String,
+    }
+
+    type User {
+        email: String,
+        token: String,
+        courses: [Course]
+    }
+
     type Query {
         otpRequest(email: String!): LoginResponse
         login(email: String!, otp: String!): LoginResponse
+        getCourses(email: String!, token: String!): [Course]
     }
 
     
@@ -47,8 +64,19 @@ export const resolvers = {
             else{
                 return {error: true, error_message: "Invalid OTP"};
             }
+        },
+        getCourses: async (parent, args, context, info) => {
+            const database = context.database;
+            const userCollection = database.collection('users');
+            const collection = database.collection('courses');
+            console.log(args);
+            const user = await userCollection.findOne({email: args.email, token: args.token});
+            console.log(user);
+            if(user){
+                console.log(user.courses);
+                return await collection.find({id: {$in: user.courses}}).toArray();
+            } 
         }
 
     },
-    
 };

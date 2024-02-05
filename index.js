@@ -2,7 +2,8 @@ import {connectToDatabase, getDatabase} from './database/database.js';
 import {typeDefs, resolvers} from './graphql/definations.js';
 import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
-import {ApolloServerPluginLandingPageLocalDefault} from '@apollo/server/plugin/landingPage/default';
+import { updateDB } from './database/updateDB.js';
+import cron from 'node-cron';
 
 
 
@@ -13,7 +14,9 @@ const port = process.env.PORT || 3000
 
 await connectToDatabase();
 
-
+cron.schedule('* 2 * * *', async () => {
+    updateDB();
+});
 // await updateDB();
 
 const server = new ApolloServer({
