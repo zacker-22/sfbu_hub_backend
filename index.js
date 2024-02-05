@@ -19,7 +19,6 @@ await connectToDatabase();
 const server = new ApolloServer({
     typeDefs,
     resolvers,
-    plugins: [ApolloServerPluginLandingPageLocalDefault({ footer: false })],
 });
 
 const { url } = await startStandaloneServer(server, {

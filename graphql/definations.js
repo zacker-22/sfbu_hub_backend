@@ -36,9 +36,9 @@ export const resolvers = {
             const database = context.database;
             const collection = database.collection('users');
             const user = await collection.findOne({email: args.email, otp: args.otp});
-            await collection.updateOne({email: args.email}, {$set: {otp: "", token: "asdfghjkl", timestamp: new Date()}} );
-
+            
             if(user){
+                await collection.updateOne({email: args.email}, {$set: {otp: "", token: "asdfghjkl", timestamp: new Date()}} );
                 return {error: false, error_message: "Logged in successfully", token: "asdfghjkl"};
             }
             else{
