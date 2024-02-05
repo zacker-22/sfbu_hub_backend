@@ -1,3 +1,3 @@
-## Capstone project
+# Capstone project
 
-# Backend for sfbu_hub
+## Backend for sfbu_hub
