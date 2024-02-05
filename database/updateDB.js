@@ -2,6 +2,7 @@ import axios from "axios";
 import { getDatabase } from "./database.js";
 import JSSoup from 'jssoup';
 import { getDateTimeFromText, getLocationFromText } from "../chatgpt/chatGPT.js";
+import { text } from "express";
 
 
 function getConfig(accessToken, page=1) {
@@ -22,6 +23,7 @@ export const updateDB = async () => {
     const courseCollection = database.collection('courses');
     const userCollection = database.collection('users');
     const users = await userCollection.find().toArray();
+    const cacheCollection = database.collection('cache');
     for(const user of users){
         if(user.canvas_token){
             let page = 1;
@@ -48,32 +50,36 @@ export const updateDB = async () => {
 
                 let soup = new Soup(courseHtml.data);
                 
-                let schdule = soup.text.indexOf('Schedule');
+                let schedule = soup.text.indexOf('Schedule');
                 let location = soup.text.indexOf('Location');
-                // console.log(course.is_public);
-                // console.log(course.name);
-                // console.log(soup.text.substring(schdule, schdule + 150));
-                // console.log(await getDateTimeFromText(soup.text.substring(schdule, schdule + 150)));
-                // console.log(soup.text.substring(location, location + 150));
-                // console.log(await getLocationFromText(soup.text.substring(location, location + 150)));
+      
+                let scheduleText = soup.text.substring(schedule, schedule + 150);
+                let locationText = soup.text.substring(location, location + 150);
+                let scheduleJson = await cacheCollection.findOne({query: scheduleText});
+                let locationJson = await cacheCollection.findOne({query: locationText});
 
-                
+                if(scheduleJson == null){
+                    scheduleJson = await getDateTimeFromText(scheduleText);
+                    cacheCollection.insertOne({query: scheduleText, result: scheduleJson});
+                }
+                if(locationJson == null){
+                    locationJson = await getLocationFromText(locationText);
+                    cacheCollection.insertOne({query: locationText, result: locationJson});
+                }
 
-                let courseSchedule = await getDateTimeFromText(soup.text.substring(schdule, schdule + 150));
-                let courseLocation = await getLocationFromText(soup.text.substring(location, location + 150));
+
                 courseCollection.updateOne({id: course.id}, {$set: {
                     id: course.id,
                     name: course.name,
                     is_public: course.is_public,
-                    schdule_day: courseSchedule.day,
-                    schdule_time1: courseSchedule.time1,
-                    schdule_time2: courseSchedule.time2,
-                    location: courseLocation.location,
+                    schedule_day: scheduleJson.day,
+                    schedule_time1: scheduleJson.time1,
+                    schedule_time2: scheduleJson.time2,
+                    location: locationJson.location,
                 }}, {upsert: true});
             }
             
             userCollection.updateOne({_id: user._id}, {$set: {courses: courses.map(course => course.id)}});
-            console.log(user, courses.map(course => course.id));
 
         }
     }
