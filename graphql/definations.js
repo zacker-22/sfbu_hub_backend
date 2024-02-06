@@ -44,7 +44,7 @@ export const typeDefs = `#graphql
         otpRequest(email: String!): LoginResponse
         login(email: String!, otp: String!): LoginResponse
         getCourses(email: String!, token: String!): CourseResponse
-        getCanvasToken(email: String!, token: String!): CanvasTokenResponse
+        hasCanvasToken(email: String!, token: String!): CanvasTokenResponse
     }
 
     type Mutation {
