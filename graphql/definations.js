@@ -48,7 +48,7 @@ export const typeDefs = `#graphql
     }
 
     type Mutation {
-        setCanvasToken(email: String!, token: String!): LoginResponse
+        setCanvasToken(email: String!, token: String!, canvas_token: String!): LoginResponse
     }    
 `;
 
