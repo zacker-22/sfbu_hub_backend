@@ -64,11 +64,11 @@ export const updateDB = async () => {
                 let scheduleText = soup.text.substring(schedule, schedule + 100);
                 let locationText = soup.text.substring(location, location + 100);
                 console.log(course.name);
-                console.log(scheduleText);
-                console.log(locationText);
+                // console.log(scheduleText);
+                // console.log(locationText);
 
-                let scheduleJson = await cacheCollection.findOne({query: scheduleText});
-                let locationJson = await cacheCollection.findOne({query: locationText});
+                let scheduleJson = await cacheCollection.findOne({query: scheduleText}).result;
+                let locationJson = await cacheCollection.findOne({query: locationText}).result;
 
                 if(scheduleJson == null){
                     scheduleJson = await getDateTimeFromText(scheduleText);
@@ -79,7 +79,10 @@ export const updateDB = async () => {
                     cacheCollection.insertOne({query: locationText, result: locationJson});
                 }
 
-                courseCollection.updateOne({id: course.id}, {$set: {
+                console.log(scheduleJson);
+                console.log(locationJson);
+
+                await courseCollection.updateOne({id: course.id}, {$set: {
                     id: course.id,
                     name: course.name,
                     is_public: course.is_public,
