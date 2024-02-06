@@ -36,10 +36,15 @@ export const typeDefs = `#graphql
         courses: [Course]
     }
 
+    type CanvasTokenResponse {
+        has_canvas_token: Boolean
+    }
+
     type Query {
         otpRequest(email: String!): LoginResponse
         login(email: String!, otp: String!): LoginResponse
         getCourses(email: String!, token: String!): CourseResponse
+        getCanvasToken(email: String!, token: String!): CanvasTokenResponse
     }
 
     type Mutation {
