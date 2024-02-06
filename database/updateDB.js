@@ -3,13 +3,14 @@ import { getDatabase } from "./database.js";
 import JSSoup from 'jssoup';
 import { getDateTimeFromText, getLocationFromText } from "../chatgpt/chatGPT.js";
 import { text } from "express";
+import { config } from "dotenv";
 
 
 function getConfig(accessToken, page=1) {
     return {
         method: 'get',
         maxBodyLength: Infinity,
-        url: `https://sfbu.instructure.com/api/v1/courses/?page=${page}`,
+        url: `https://sfbu.instructure.com/api/v1/courses/?page=${page}&include[]=syllabus_body&per_page=100`,
         headers: { 
         'Authorization': `Bearer ${accessToken}`
         }
@@ -28,33 +29,44 @@ export const updateDB = async () => {
         if(user.canvas_token){
             let page = 1;
             let courses = [];
-            let response = await axios(getConfig(user.canvas_token, page));
-            courses = courses.concat(response.data);
-            while(response.headers.link.includes('rel="next"')){
-                page++;
+            let response = null;
+
+            try{
                 response = await axios(getConfig(user.canvas_token, page));
-                courses = courses.concat(response.data);
             }
+            catch(err){
+                console.log("error in fetching courses from canvas");
+                userCollection.updateOne({_id: user._id}, {$unset: {canvas_token : ""} });
+            }
+            
+
+            if(response == null){
+                continue;
+            }
+
+            courses = courses.concat(response.data);
+            
             
             let maxTerm = Math.max(...courses.map(course => parseInt(course.enrollment_term_id) ));
             
             courses = courses.filter(course => course.enrollment_term_id === maxTerm);
 
-            // console.log(courses);
-
-
 
             for(let course of courses){
-                let courseHtml = await axios.get(`https://sfbu.instructure.com/courses/${course.id}/`);
+                
                 const Soup = JSSoup.default;
 
-                let soup = new Soup(courseHtml.data);
+                let soup = new Soup(course.syllabus_body);
                 
                 let schedule = soup.text.indexOf('Schedule');
                 let location = soup.text.indexOf('Location');
       
-                let scheduleText = soup.text.substring(schedule, schedule + 150);
-                let locationText = soup.text.substring(location, location + 150);
+                let scheduleText = soup.text.substring(schedule, schedule + 100);
+                let locationText = soup.text.substring(location, location + 100);
+                console.log(course.name);
+                console.log(scheduleText);
+                console.log(locationText);
+
                 let scheduleJson = await cacheCollection.findOne({query: scheduleText});
                 let locationJson = await cacheCollection.findOne({query: locationText});
 
@@ -66,7 +78,6 @@ export const updateDB = async () => {
                     locationJson = await getLocationFromText(locationText);
                     cacheCollection.insertOne({query: locationText, result: locationJson});
                 }
-
 
                 courseCollection.updateOne({id: course.id}, {$set: {
                     id: course.id,
@@ -80,7 +91,6 @@ export const updateDB = async () => {
             }
             
             userCollection.updateOne({_id: user._id}, {$set: {courses: courses.map(course => course.id)}});
-
         }
     }
 }

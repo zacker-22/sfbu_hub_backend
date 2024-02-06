@@ -42,7 +42,9 @@ export const typeDefs = `#graphql
         getCourses(email: String!, token: String!): CourseResponse
     }
 
-    
+    type Mutation {
+        setCanvasToken(email: String!, token: String!): LoginResponse
+    }    
 `;
 
 
@@ -87,7 +89,33 @@ export const resolvers = {
             }else{
                 return {error: true, error_message: "Invalid token"};
             } 
+        },
+        hasCanvasToken: async (parent, args, context, info) => {
+            const database = context.database;
+            const collection = database.collection('users');
+            const user = await collection.findOne({email: args
+            .email, token: args.token});
+            if(user.canvas_token){
+                return {has_canvas_token: true};
+            }
+            else{
+                return {has_canvas_token: false};
+            }
         }
 
     },
+    Mutation: {
+        setCanvasToken: async (parent, args, context, info) => {
+            const database = context.database;
+            const collection = database.collection('users');
+            const user = await collection.findOne({email: args.email, token: args.token});
+            if(user){
+                collection.updateOne({email: args.email}, {$set: {canvas_token: args.canvas_token}});
+                return {error: false, error_message: "Token set successfully"};
+            }
+            else{
+                return {error: true, error_message: "Invalid token"};
+            }
+        }
+    }
 };
