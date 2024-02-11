@@ -1,6 +1,5 @@
 import axios from "axios";
-import e from "express";
-import { updateDB } from "../database/updateDB";
+import { updateDB } from "../database/updateDB.js";
 
 export const typeDefs = `#graphql
     # Comments in GraphQL strings (such as this one) start with the hash (#) symbol.
@@ -87,11 +86,10 @@ export const resolvers = {
             const database = context.database;
             const userCollection = database.collection('users');
             const collection = database.collection('courses');
-            console.log(args);
+  
             const user = await userCollection.findOne({email: args.email, token: args.token});
             console.log(user);
             if(user){
-                console.log(user.courses);
                 return {error: false, error_message: "", courses: await collection.find({id: {$in: user.courses}}).toArray()};
             }else{
                 return {error: true, error_message: "Invalid token"};
@@ -100,8 +98,7 @@ export const resolvers = {
         hasCanvasToken: async (parent, args, context, info) => {
             const database = context.database;
             const collection = database.collection('users');
-            const user = await collection.findOne({email: args
-            .email, token: args.token});
+            const user = await collection.findOne({email: args.email, token: args.token});
             if(user.canvas_token){
                 return {has_canvas_token: true};
             }
