@@ -1,5 +1,6 @@
 import axios from "axios";
 import e from "express";
+import { updateDB } from "../database/updateDB";
 
 export const typeDefs = `#graphql
     # Comments in GraphQL strings (such as this one) start with the hash (#) symbol.
@@ -61,10 +62,11 @@ export const resolvers = {
             const user = await collection.findOne({email: args.email});
             axios.get(`https://zacker22.pythonanywhere.com/send-email?email=${args.email}&otp=1234`);
             if(!user){
-                collection.insertOne({email: args.email, otp: "1234", timestamp: new Date()});
+                await collection.insertOne({email: args.email, otp: "1234", timestamp: new Date()});
+                updateDB(await collection.findOne({email: args.email}));
             }
             else{
-                collection.updateOne({email: args.email}, {$set: {otp: "1234", timestamp: new Date()}});
+                await collection.updateOne({email: args.email}, {$set: {otp: "1234", timestamp: new Date()}});
             }
             return {error: false, error_message: "OTP sent to your email"};
         },

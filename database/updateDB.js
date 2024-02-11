@@ -19,11 +19,12 @@ function getConfig(accessToken, page=1) {
   
  
 
-export const updateDB = async () => {
+export const updateDB = async (oneUser = null) => {
     const database = getDatabase();
     const courseCollection = database.collection('courses');
     const userCollection = database.collection('users');
-    const users = await userCollection.find().toArray();
+
+    const users = oneUser == null ?  await userCollection.find().toArray() : [oneUser];
     const cacheCollection = database.collection('cache');
     for(const user of users){
         if(user.canvas_token){
@@ -63,9 +64,6 @@ export const updateDB = async () => {
       
                 let scheduleText = soup.text.substring(schedule, schedule + 100);
                 let locationText = soup.text.substring(location, location + 100);
-                console.log(course.name);
-                // console.log(scheduleText);
-                // console.log(locationText);
 
                 let scheduleJson = await cacheCollection.findOne({query: scheduleText}).result;
                 let locationJson = await cacheCollection.findOne({query: locationText}).result;
@@ -78,9 +76,6 @@ export const updateDB = async () => {
                     locationJson = await getLocationFromText(locationText);
                     cacheCollection.insertOne({query: locationText, result: locationJson});
                 }
-
-                console.log(scheduleJson);
-                console.log(locationJson);
 
                 await courseCollection.updateOne({id: course.id}, {$set: {
                     id: course.id,
