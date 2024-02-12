@@ -60,13 +60,17 @@ export const resolvers = {
             const collection = database.collection('users');
             const user = await collection.findOne({email: args.email});
             axios.get(`https://zacker22.pythonanywhere.com/send-email?email=${args.email}&otp=1234`);
+            console.log("otp sent");
             if(!user){
-                await collection.insertOne({email: args.email, otp: "1234", timestamp: new Date()});
-                updateDB(await collection.findOne({email: args.email}));
+                
+                collection.insertOne({email: args.email, otp: "1234", timestamp: new Date()});
+                // updateDB(await collection.findOne({email: args.email}));
             }
             else{
-                await collection.updateOne({email: args.email}, {$set: {otp: "1234", timestamp: new Date()}});
+                collection.updateOne({email: args.email}, {$set: {otp: "1234", timestamp: new Date()}});
+              
             }
+            console.log("otp sent 2");
             return {error: false, error_message: "OTP sent to your email"};
         },
         login: async (parent, args, context, info) => {
@@ -96,6 +100,7 @@ export const resolvers = {
             } 
         },
         hasCanvasToken: async (parent, args, context, info) => {
+            console.log(args);
             const database = context.database;
             const collection = database.collection('users');
             const user = await collection.findOne({email: args.email, token: args.token});

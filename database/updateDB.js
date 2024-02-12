@@ -27,6 +27,7 @@ export const updateDB = async (oneUser = null) => {
     const users = oneUser == null ?  await userCollection.find().toArray() : [oneUser];
     const cacheCollection = database.collection('cache');
     for(const user of users){
+        console.log("updating user: ", user.email);
         if(user.canvas_token){
             let page = 1;
             let courses = [];
@@ -68,11 +69,15 @@ export const updateDB = async (oneUser = null) => {
                 let scheduleJson = await cacheCollection.findOne({query: scheduleText}).result;
                 let locationJson = await cacheCollection.findOne({query: locationText}).result;
 
-                if(scheduleJson == null){
+                if(scheduleJson === null){
+                    console.log("fetching schedule from gpt");
+                    console.log(scheduleText);
                     scheduleJson = await getDateTimeFromText(scheduleText);
                     cacheCollection.insertOne({query: scheduleText, result: scheduleJson});
                 }
-                if(locationJson == null){
+                if(locationJson === null){
+                    console.log("fetching schedule from gpt");
+                    console.log(locationText);
                     locationJson = await getLocationFromText(locationText);
                     cacheCollection.insertOne({query: locationText, result: locationJson});
                 }
@@ -81,10 +86,10 @@ export const updateDB = async (oneUser = null) => {
                     id: course.id,
                     name: course.name,
                     is_public: course.is_public,
-                    schedule_day: scheduleJson.day,
-                    schedule_time1: scheduleJson.time1,
-                    schedule_time2: scheduleJson.time2,
-                    location: locationJson.location,
+                    schedule_day: scheduleJson?.day ?? null,
+                    schedule_time1: scheduleJson?.time1 ?? null ,
+                    schedule_time2: scheduleJson?.time2 ?? null,
+                    location: locationJson?.location,
                 }}, {upsert: true});
             }
             
