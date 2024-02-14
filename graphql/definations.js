@@ -120,6 +120,11 @@ export const resolvers = {
             const database = context.database;
             const collection = database.collection('users');
             return await collection.find({courses: parseInt(args.course_id) }).toArray();
+        },
+        getChatMessages: async (parent, args, context, info) => {
+            const database = context.database;
+            const collection = database.collection('chats');
+            return (await collection.findOne({course_id: args.course_id}).toArray()) || [];
         }
 
     },
