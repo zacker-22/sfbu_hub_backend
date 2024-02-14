@@ -27,8 +27,9 @@ export const updateDB = async (oneUser = null) => {
     const users = oneUser == null ?  await userCollection.find().toArray() : [oneUser];
     const cacheCollection = database.collection('cache');
     for(const user of users){
-        console.log("updating user: ", user.email);
+        
         if(user.canvas_token){
+            console.log("updating user: ", user.email);
             let page = 1;
             let courses = [];
             let response = null;
@@ -41,6 +42,7 @@ export const updateDB = async (oneUser = null) => {
                 userCollection.updateOne({_id: user._id}, {$unset: {canvas_token : ""} });
             }
             
+
 
             if(response == null){
                 continue;
@@ -66,21 +68,22 @@ export const updateDB = async (oneUser = null) => {
                 let scheduleText = soup.text.substring(schedule, schedule + 100);
                 let locationText = soup.text.substring(location, location + 100);
 
-                let scheduleJson = await cacheCollection.findOne({query: scheduleText}).result;
-                let locationJson = await cacheCollection.findOne({query: locationText}).result;
+                let scheduleJson = await cacheCollection.findOne({query: scheduleText});
+                let locationJson = await cacheCollection.findOne({query: locationText});
 
-                if(scheduleJson === null){
-                    console.log("fetching schedule from gpt");
-                    console.log(scheduleText);
+                scheduleJson = scheduleJson?.result;
+                locationJson = locationJson?.result;
+
+
+                if(scheduleJson === null || scheduleJson === undefined || scheduleJson.time1 == null || scheduleJson.time2 == null || scheduleJson.day == null){
                     scheduleJson = await getDateTimeFromText(scheduleText);
                     cacheCollection.insertOne({query: scheduleText, result: scheduleJson});
                 }
-                if(locationJson === null){
-                    console.log("fetching schedule from gpt");
-                    console.log(locationText);
+                if(locationJson === null || locationJson === undefined){
                     locationJson = await getLocationFromText(locationText);
                     cacheCollection.insertOne({query: locationText, result: locationJson});
                 }
+
 
                 await courseCollection.updateOne({id: course.id}, {$set: {
                     id: course.id,
