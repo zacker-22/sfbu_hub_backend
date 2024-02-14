@@ -44,16 +44,26 @@ export const typeDefs = `#graphql
         has_canvas_token: Boolean
     }
 
+    type ChatMessage {
+        group_id: String,
+        sender_name: String,
+        sender_email: String,
+        message: String,
+        created_at: DateTime
+    }
+
     type Query {
         otpRequest(email: String!): LoginResponse
         login(email: String!, otp: String!): LoginResponse
         getCourses(email: String!, token: String!): CourseResponse
         hasCanvasToken(email: String!, token: String!): CanvasTokenResponse
         getCourseMembers(course_id: String!): [User]
+        getChatMessages(course_id: String!): [ChatMessage]
     }
 
     type Mutation {
         setCanvasToken(email: String!, token: String!, canvas_token: String!): LoginResponse
+        addChatMessage(course_id: String!, sender_name: String!, sender_email: String!, message: String!): LoginResponse
     }    
 `;
 
@@ -151,6 +161,17 @@ export const resolvers = {
             }
             else{
                 return {error: true, error_message: "Invalid token"};
+            }
+        },
+        addChatMessage: async (parent, args, context, info) => {
+            try{
+                const database = context.database;
+                const collection = database.collection('chats');
+                collection.insertOne({course_id: args.course_id, sender_name: args.sender_name, sender_email: args.sender_email, message: args.message, created_at: new Date()});
+                return {error: false, error_message: "Message sent successfully"};
+            }
+            catch(err){
+                return {error: true, error_message: "Error in sending message"};
             }
         }
     }
