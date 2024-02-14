@@ -16,6 +16,18 @@ function getConfig(accessToken, page=1) {
         }
     }
 }
+
+
+function getUserConfig(accessToken, page=1) {
+    return {
+        method: 'get',
+        maxBodyLength: Infinity,
+        url: `https://sfbu.instructure.com/api/v1/users/self`,
+        headers: { 
+        'Authorization': `Bearer ${accessToken}`
+        }
+    }
+}
   
  
 
@@ -94,9 +106,14 @@ export const updateDB = async (oneUser = null) => {
                     schedule_time2: scheduleJson?.time2 ?? null,
                     location: locationJson?.location,
                 }}, {upsert: true});
+
+                
             }
-            
-            userCollection.updateOne({_id: user._id}, {$set: {courses: courses.map(course => course.id)}});
+
+            const userDetail = await axios(getUserConfig(user.canvas_token));
+
+
+            userCollection.updateOne({_id: user._id}, {$set: {courses: courses.map(course => course.id), name: userDetail.data.name, short_name: userDetail.data.short_name}});
         }
     }
 }

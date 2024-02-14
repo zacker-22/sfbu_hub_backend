@@ -22,12 +22,16 @@ export const typeDefs = `#graphql
         location: String,
         error: Boolean,
         error_message: String,
+        members: [User]
     }
 
     type User {
         email: String,
         token: String,
-        courses: [Course]
+        courses: [Course],
+        canvas_token: String,
+        name: String,
+        short_name: String,
     }
 
     type CourseResponse {
@@ -45,6 +49,7 @@ export const typeDefs = `#graphql
         login(email: String!, otp: String!): LoginResponse
         getCourses(email: String!, token: String!): CourseResponse
         hasCanvasToken(email: String!, token: String!): CanvasTokenResponse
+        getCourseMembers(course_id: String!): [User]
     }
 
     type Mutation {
@@ -110,9 +115,24 @@ export const resolvers = {
             else{
                 return {has_canvas_token: false};
             }
+        },
+        getCourseMembers: async (parent, args, context, info) => {
+            const database = context.database;
+            const collection = database.collection('users');
+            return await collection.find({courses: parseInt(args.course_id) }).toArray();
         }
 
     },
+    Course: {
+        members: async (parent, args, context, info) => {
+            const database = context.database;
+            const collection = database.collection('users');
+            console.log(parent);
+            return await collection.find( {courses : parseInt(parent.id) } ).toArray();
+        }
+
+    },
+
     Mutation: {
         setCanvasToken: async (parent, args, context, info) => {
             const database = context.database;
@@ -120,7 +140,9 @@ export const resolvers = {
             const user = await collection.findOne({email: args.email, token: args.token});
             if(user){
                 collection.updateOne({email: args.email}, {$set: {canvas_token: args.canvas_token}});
+                updateDB(user);
                 return {error: false, error_message: "Token set successfully"};
+                
             }
             else{
                 return {error: true, error_message: "Invalid token"};
