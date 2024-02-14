@@ -128,7 +128,7 @@ export const resolvers = {
             const database = context.database;
             const collection = database.collection('users');
             console.log(parent);
-            return await collection.find( {courses : parseInt(parent.id) } ).toArray();
+            return await collection.find( {courses : parseInt(parent.id), canvas_token: {$exists : true} } ).toArray();
         }
 
     },
