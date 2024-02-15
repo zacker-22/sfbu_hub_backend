@@ -16,16 +16,11 @@ const port = process.env.PORT || 3000
 await connectToDatabase();
 
 // cron.schedule('* 2 * * *', async () => {
-// await updateDB();
+await updateDB();
 // });
 // await updateDB();
 
-app = express();
 
-app.get('/update_db', (req, res) => {
-    updateDB();
-    res.send("DB updated");
-});
 
 
 const server = new ApolloServer({
