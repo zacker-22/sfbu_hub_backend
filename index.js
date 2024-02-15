@@ -4,6 +4,7 @@ import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
 import { updateDB } from './database/updateDB.js';
 import cron from 'node-cron';
+import express from 'express';
 
 
 
@@ -18,6 +19,14 @@ await connectToDatabase();
 // await updateDB();
 // });
 // await updateDB();
+
+app = express();
+
+app.get('/update_db', (req, res) => {
+    updateDB();
+    res.send("DB updated");
+});
+
 
 const server = new ApolloServer({
     typeDefs,
