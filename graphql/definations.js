@@ -134,7 +134,7 @@ export const resolvers = {
         getChatMessages: async (parent, args, context, info) => {
             const database = context.database;
             const collection = database.collection('chats');
-            return (await collection.findOne({course_id: args.course_id})) || [];
+            return (await collection.find({course_id: args.course_id})).toArray() || [];
         }
 
     },
