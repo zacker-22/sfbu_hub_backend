@@ -59,6 +59,7 @@ export const typeDefs = `#graphql
         hasCanvasToken(email: String!, token: String!): CanvasTokenResponse
         getCourseMembers(course_id: String!): [User]
         getChatMessages(course_id: String!): [ChatMessage]
+        user(email: String!, token: String!): User
     }
 
     type Mutation {
@@ -135,6 +136,11 @@ export const resolvers = {
             const database = context.database;
             const collection = database.collection('chats');
             return (await collection.find({course_id: args.course_id})).toArray() || [];
+        },
+        user: async (parent, args, context, info) => {
+            const database = context.database;
+            const collection = database.collection('users');
+            return await collection.findOne({email: args.email, token: args.token});
         }
 
     },
