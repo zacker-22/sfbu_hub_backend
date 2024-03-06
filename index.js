@@ -16,7 +16,7 @@ const port = process.env.PORT || 3000
 await connectToDatabase();
 
 // cron.schedule('* 2 * * *', async () => {
-await updateDB();
+// await updateDB();
 // });
 // await updateDB();
 

@@ -1,5 +1,5 @@
 import axios from "axios";
-import { updateDB } from "../database/updateDB.js";
+import { updateDB, getAssignments } from "../database/updateDB.js";
 
 export const typeDefs = `#graphql
     # Comments in GraphQL strings (such as this one) start with the hash (#) symbol.
@@ -52,6 +52,15 @@ export const typeDefs = `#graphql
         created_at: DateTime
     }
 
+    type Assignments {
+        id: String,
+        name: String,
+        due_at: DateTime,
+        course_id: String,
+        description: String,
+        is_submitted: Boolean
+    }
+
     type Query {
         otpRequest(email: String!): LoginResponse
         login(email: String!, otp: String!): LoginResponse
@@ -60,6 +69,7 @@ export const typeDefs = `#graphql
         getCourseMembers(course_id: String!): [User]
         getChatMessages(course_id: String!): [ChatMessage]
         user(email: String!, token: String!): User
+        assignments(email: String!, token: String!): [Assignments]
     }
 
     type Mutation {
@@ -141,6 +151,47 @@ export const resolvers = {
             const database = context.database;
             const collection = database.collection('users');
             return await collection.findOne({email: args.email, token: args.token});
+        },
+        assignments: async (parent, args, context, info) => {
+            const database = context.database;
+            const collection = database.collection('users');
+            const user = await collection.findOne({email: args.email, token: args.token});
+            const courseCollection = database.collection('courses');
+            if(user){
+                const canvas_token = user.canvas_token;
+                if(!canvas_token){
+                    return [];
+                }
+                const courses = user.courses;
+                
+                let assignments = [];
+                let promises = [];
+                for(let course of courses){
+                    const course_name = (await courseCollection.findOne({id: course})).name;
+                    promises.push(getAssignments(canvas_token, course).then(response => {
+                        const currentAssignments = response.map(assignment => {
+                            return {
+                                id: assignment.id,
+                                name: assignment.name,
+                                due_at: assignment.due_at,
+                                course_id: course,
+                                description: course_name,
+                                is_submitted: assignment.has_submitted_submissions
+                            }
+                        });
+                        assignments = assignments.concat(currentAssignments);
+                    }));                    
+                }
+                await Promise.all(promises);
+                // remove assignment with due_at == null and is_submitted == false
+                assignments = assignments.filter(
+                    assignment => (assignment.due_at != null) && (assignment.is_submitted == false)
+                )
+                return assignments;
+            }
+            else{
+                return [];
+            }
         }
 
     },

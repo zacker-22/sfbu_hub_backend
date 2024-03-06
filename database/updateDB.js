@@ -28,6 +28,17 @@ function getUserConfig(accessToken, page=1) {
         }
     }
 }
+
+export const getAssignments = async (accessToken, course_id) => {
+    const response = await axios.get(`https://sfbu.instructure.com/api/v1/courses/${course_id}/assignments`, {
+        headers: {
+            'Authorization': `Bearer ${accessToken}`
+        }
+    });
+    return response.data;
+}
+
+
   
  
 
