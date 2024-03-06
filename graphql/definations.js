@@ -185,7 +185,7 @@ export const resolvers = {
                 await Promise.all(promises);
                 // remove assignment with due_at == null and is_submitted == false
                 assignments = assignments.filter(
-                    assignment => (assignment.due_at != null) && (assignment.is_submitted == false)
+                    assignment => (assignment.due_at != null) && (assignment.is_submitted == false || new Date(assignment.due_at) > new Date())
                 )
                 return assignments;
             }
