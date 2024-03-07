@@ -1,6 +1,7 @@
 import axios from "axios";
 import { updateDB, getAssignments } from "../database/updateDB.js";
-import random from 'random';
+import env from 'dotenv';
+env.config();
 
 export const typeDefs = `#graphql
     # Comments in GraphQL strings (such as this one) start with the hash (#) symbol.
@@ -93,8 +94,16 @@ export const resolvers = {
             const database = context.database;
             const collection = database.collection('users');
             const user = await collection.findOne({email: args.email});
-            const otp = Math.floor(1000 + Math.random() * 9000).toString();
-            axios.get(`https://zacker22.pythonanywhere.com/send-email?email=${args.email}&otp=${otp}`);
+            let otp = Math.floor(1000 + Math.random() * 9000).toString();
+
+            if(args.email == process.env.TEST_EMAIL){
+                otp = "1234";
+            }else{
+                axios.get(`https://zacker22.pythonanywhere.com/send-email?email=${args.email}&otp=${otp}`);
+            }
+            
+
+            
             if(!user){
                 collection.insertOne({email: args.email, otp: otp, timestamp: new Date()});
                 // updateDB(await collection.findOne({email: args.email}));
