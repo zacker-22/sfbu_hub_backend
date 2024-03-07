@@ -206,10 +206,11 @@ export const resolvers = {
             const userCollection = database.collection('users');
             const courses = (await userCollection.findOne({email: args.email})).courses;
             let chatReads = [];
+
             const chatCollection = database.collection('chats');
 
             for(let course of courses){
-                const chatRead = await collection.findOne({email: args.email, course_id: course});
+                const chatRead = await collection.findOne({email: args.email, course_id: course.toString()});
                 const chatCount = await chatCollection.countDocuments({course_id:  course.toString() });
                 if(chatRead){
                     chatReads.push({course_id: chatRead.course_id, count: chatCount - chatRead.count});
