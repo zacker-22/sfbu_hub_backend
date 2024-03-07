@@ -61,6 +61,11 @@ export const typeDefs = `#graphql
         is_submitted: Boolean
     }
 
+    type ChatReads {
+        course_id: String,
+        count: Int
+    }
+
     type Query {
         otpRequest(email: String!): LoginResponse
         login(email: String!, otp: String!): LoginResponse
@@ -70,11 +75,13 @@ export const typeDefs = `#graphql
         getChatMessages(course_id: String!): [ChatMessage]
         user(email: String!, token: String!): User
         assignments(email: String!, token: String!): [Assignments]
+        chatReads(email: String!): [ChatReads]
     }
 
     type Mutation {
         setCanvasToken(email: String!, token: String!, canvas_token: String!): LoginResponse
         addChatMessage(course_id: String!, sender_name: String!, sender_email: String!, message: String!): LoginResponse
+        markChatRead(email: String!, token: String!, course_id: String!): Boolean
     }    
 `;
 
@@ -192,8 +199,26 @@ export const resolvers = {
             else{
                 return [];
             }
-        }
+        },
+        chatReads: async (parent, args, context, info) => {
+            const database = context.database;
+            const collection = database.collection('chat_reads');
+            const userCollection = database.collection('users');
+            const courses = (await userCollection.findOne({email: args.email})).courses;
+            let chatReads = [];
+            const chatCollection = database.collection('chats');
 
+            for(let course of courses){
+                const chatRead = await collection.findOne({email: args.email, course_id: course});
+                const chatCount = await chatCollection.countDocuments({course_id:  course.toString() });
+                if(chatRead){
+                    chatReads.push({course_id: chatRead.course_id, count: chatCount - chatRead.count});
+                }else{
+                    chatReads.push({course_id: course, count: chatCount});
+                }
+            }
+            return chatReads;
+        }
     },
     Course: {
         members: async (parent, args, context, info) => {
@@ -230,6 +255,20 @@ export const resolvers = {
             catch(err){
                 return {error: true, error_message: "Error in sending message"};
             }
+        },
+        markChatRead: async (parent, args, context, info) => {
+            const database = context.database;
+            const collection = database.collection('chat_reads');
+            const chatRead = await collection.findOne({email: args.email, course_id: args.course_id});
+            const chatCollection = database.collection('chats');
+            const chatCount = await chatCollection.countDocuments({course_id: args.course_id});
+            if(chatRead){
+                collection.updateOne({email: args.email, course_id: args.course_id}, {$set: {count: chatCount}});
+            }
+            else{
+                collection.insertOne({email: args.email, course_id: args.course_id, count: chatCount});
+            }
+            return true;
         }
     }
 };
