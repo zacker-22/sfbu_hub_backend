@@ -5,6 +5,7 @@ import { startStandaloneServer } from '@apollo/server/standalone';
 import { updateDB } from './database/updateDB.js';
 import cron from 'node-cron';
 import express from 'express';
+import random from 'random';
 
 
 
@@ -20,7 +21,7 @@ await connectToDatabase();
 // });
 // await updateDB();
 
-
+// console.log(random.str);
 
 
 const server = new ApolloServer({
