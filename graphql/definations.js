@@ -93,8 +93,8 @@ export const resolvers = {
             const database = context.database;
             const collection = database.collection('users');
             const user = await collection.findOne({email: args.email});
-            axios.get(`https://zacker22.pythonanywhere.com/send-email?email=${args.email}&otp=${otp}`);
             const otp = Math.floor(1000 + Math.random() * 9000).toString();
+            axios.get(`https://zacker22.pythonanywhere.com/send-email?email=${args.email}&otp=${otp}`);
             if(!user){
                 collection.insertOne({email: args.email, otp: otp, timestamp: new Date()});
                 // updateDB(await collection.findOne({email: args.email}));
