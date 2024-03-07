@@ -1,5 +1,6 @@
 import axios from "axios";
 import { updateDB, getAssignments } from "../database/updateDB.js";
+import random from 'random';
 
 export const typeDefs = `#graphql
     # Comments in GraphQL strings (such as this one) start with the hash (#) symbol.
