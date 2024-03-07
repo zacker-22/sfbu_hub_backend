@@ -81,7 +81,7 @@ export const typeDefs = `#graphql
     type Mutation {
         setCanvasToken(email: String!, token: String!, canvas_token: String!): LoginResponse
         addChatMessage(course_id: String!, sender_name: String!, sender_email: String!, message: String!): LoginResponse
-        markChatRead(email: String!, token: String!, course_id: String!): Boolean
+        markChatRead(email: String!, course_id: String!): Boolean
     }    
 `;
 
