@@ -109,7 +109,7 @@ export const resolvers = {
             const database = context.database;
             const collection = database.collection('users');
             const user = await collection.findOne({email: args.email, otp: args.otp});
-            const token = random.integers({min: 1000000000, max: 9999999999}).toString();
+            const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
             
             if(user){
                 await collection.updateOne({email: args.email}, {$set: {otp: "", token: token, timestamp: new Date()}} );
