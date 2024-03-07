@@ -47,7 +47,10 @@ export const updateDB = async (oneUser = null) => {
     const courseCollection = database.collection('courses');
     const userCollection = database.collection('users');
 
-    const users = oneUser == null ?  (await userCollection.find()).toArray() : (await userCollection.find({email: oneUser.email})).toArray();
+    const users = oneUser == null ?  await userCollection.find().toArray() : await userCollection.find({email: oneUser.email}).toArray();
+
+    console.log(users);
+    
     const cacheCollection = database.collection('cache');
     for(const user of users){
         
