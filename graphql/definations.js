@@ -237,8 +237,8 @@ export const resolvers = {
             const collection = database.collection('users');
             const user = await collection.findOne({email: args.email, token: args.token});
             if(user){
-                collection.updateOne({email: args.email}, {$set: {canvas_token: args.canvas_token}});
-                updateDB(user);
+                await collection.updateOne({email: args.email}, {$set: {canvas_token: args.canvas_token}});
+                await updateDB(user);
                 return {error: false, error_message: "Token set successfully"};
                 
             }
