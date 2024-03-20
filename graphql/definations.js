@@ -202,7 +202,12 @@ export const resolvers = {
                 await Promise.all(promises);
                 // remove assignment with due_at == null and is_submitted == false
                 const contextCollection = database.collection('context');
-                contextCollection.updateOne({email: args.email}, {$set: {assignments: assignments}});
+                if(contextCollection.findOne({email: args.email})){
+                    contextCollection.insertOne({email: args.email, assignments: assignments});
+                }
+                else{
+                    contextCollection.updateOne({email: args.email}, {$set: {assignments: assignments}});
+                }
                 assignments = assignments.filter(
                     assignment => (assignment.due_at != null) && (assignment.is_submitted == false || new Date(assignment.due_at) > new Date())
                 )
