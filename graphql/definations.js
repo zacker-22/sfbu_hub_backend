@@ -1,7 +1,7 @@
 import axios from "axios";
 import { updateDB, getAssignments } from "../database/updateDB.js";
 import env from 'dotenv';
-import {getReplyToChat} from 'chatgpt/chatGPT.js'
+import {getReplyToChat} from '../chatgpt/chatGPT.js'
 env.config();
 
 export const typeDefs = `#graphql
