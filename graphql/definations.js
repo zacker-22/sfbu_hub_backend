@@ -211,7 +211,7 @@ export const resolvers = {
                 await Promise.all(promises);
                 // remove assignment with due_at == null and is_submitted == false
                 const contextCollection = database.collection('context');
-                if(contextCollection.findOne({email: args.email})){
+                if(!contextCollection.findOne({email: args.email})){
                     contextCollection.insertOne({email: args.email, assignments: assignments});
                 }
                 else{
