@@ -262,7 +262,7 @@ export const resolvers = {
                 const collection = database.collection('chats');
                 if(args.course_id.startsWith("chat_bot")){
                     
-                    const chat_history = (await collection.find({course_id: args.course_id})).toArray();
+                    const chat_history = await (await collection.find({course_id: args.course_id})).toArray();
                     const user_context = "User: " + args.sender_name + " (" + args.sender_email + ")";
                     const last_message = args.message;
 
