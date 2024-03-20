@@ -133,11 +133,20 @@ export const resolvers = {
             const database = context.database;
             const userCollection = database.collection('users');
             const collection = database.collection('courses');
-  
+            const contextCollection = database.collection('context');
             const user = await userCollection.findOne({email: args.email, token: args.token});
-            console.log(user);
+            
             if(user){
-                return {error: false, error_message: "", courses: await collection.find({id: {$in: user.courses}}).toArray()};
+                const courses = await collection.find({id: {$in: user.courses}}).toArray();
+                if(contextCollection.findOne({email: args.email})){ 
+                    contextCollection.updateOne({email: args.email}, {$set: {courses: courses}});
+                }
+                else{
+                    contextCollection.insertOne({email: args.email, courses: courses});
+                }
+                
+
+                return {error: false, error_message: "", courses: courses};
             }else{
                 return {error: true, error_message: "Invalid token"};
             } 
