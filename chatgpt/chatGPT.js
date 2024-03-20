@@ -71,6 +71,7 @@ export async function getReplyToChat(chats, user_context, last_message){
             content: chat.message
         });
     }
+    console.log('chat_history', chat_history);
 
     const messageList = [
         {
