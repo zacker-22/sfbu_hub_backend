@@ -62,6 +62,7 @@ export async function getLocationFromText(raw_text)  {
 
 export async function getReplyToChat(chat, user_context, last_message){
     const openai = new OpenAI(process.env.OPENAI_API_KEY);
+    console.log('chat', chat);
 
     const messageList = [
         {
@@ -74,7 +75,7 @@ export async function getReplyToChat(chat, user_context, last_message){
         },
         {
             role: 'system',
-            content: 'Reply to the user query given the context and chat history.'
+            content: 'Reply to the user query given the context and chat history. If you don\'t have enough context, Reply with a generic message.'
         },
         {
             role: 'user',
