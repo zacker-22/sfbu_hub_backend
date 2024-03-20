@@ -75,11 +75,11 @@ export async function getReplyToChat(chats, user_context, last_message){
     const messageList = [
         {
             role: 'system',
-            content: 'You are a personal chatbot assistant. You have the following context: \n' + user_context
+            content: 'You are a personal chatbot assistant. You have the following context: \n' + JSON.stringify(user_context)
         },
         {
             role: 'system',
-            content: 'The user had following chat with you: \n' + chat_history
+            content: 'The user had following chat with you: \n' + JSON.stringify(chat_history)
         },
         {
             role: 'system',
@@ -90,6 +90,8 @@ export async function getReplyToChat(chats, user_context, last_message){
             content: last_message
         }
     ];
+
+    console.log('messageList', messageList);
 
     
 
