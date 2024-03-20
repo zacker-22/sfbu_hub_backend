@@ -259,14 +259,51 @@ export const resolvers = {
         addChatMessage: async (parent, args, context, info) => {
             try{
                 const database = context.database;
+                const userCollection = database.collection('users');
+                const user = await userCollection.findOne({email: args.sender_email});
                 const collection = database.collection('chats');
                 if(args.course_id.startsWith("chat_bot")){
                     
                     const chat_history = await (await collection.find({course_id: args.course_id})).toArray();
                     const user_context = "User: " + args.sender_name + " (" + args.sender_email + ")";
                     const last_message = args.message;
+                    const canvas_token = user.canvas_token;
+                    if(!canvas_token){
+                        return [];
+                    }
+                    const courses = user.courses;
+                    
+                    let assignments = [];
+                    let promises = [];
+                    let courseContext = [];
+                    for(let course of courses){
+                        const course_details = (await courseCollection.findOne({id: course}).toArray());
+                        courseContext.push(JSON.stringify(course_details));
+                        const course_name = course_details.name;
 
-                    console.log(chat_history, user_context, last_message);
+                        promises.push(getAssignments(canvas_token, course).then(response => {
+                            const currentAssignments = response.map(assignment => {
+                                return {
+                                    id: assignment.id,
+                                    name: assignment.name,
+                                    due_at: assignment.due_at,
+                                    course_id: course,
+                                    description: course_name,
+                                    is_submitted: assignment.has_submitted_submissions
+                                }
+                            });
+                            assignments = assignments.concat(currentAssignments);
+                        }));                    
+                    }
+                    await Promise.all(promises);
+                    
+                    user_context += "\nAssignments: " + JSON.stringify(assignments);
+
+
+
+
+                    // console.log(chat_history, user_context, last_message);
+                    
 
                     collection.insertOne({course_id: args.course_id, sender_name: args.sender_name, sender_email: args.sender_email, message: args.message, created_at: new Date()});
                     const reply = await getReplyToChat(chat_history, user_context, last_message);
