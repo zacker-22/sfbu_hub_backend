@@ -80,7 +80,7 @@ export async function getReplyToChat(chats, user_context, last_message){
         },
         {
             role: 'system',
-            content: 'The user had following chat with you: \n' + chat
+            content: 'The user had following chat with you: \n' + chat_history
         },
         {
             role: 'system',
