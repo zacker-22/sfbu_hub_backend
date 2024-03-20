@@ -266,6 +266,8 @@ export const resolvers = {
                     const user_context = "User: " + args.sender_name + " (" + args.sender_email + ")";
                     const last_message = args.message;
 
+                    console.log(chat_history, user_context, last_message);
+
                     collection.insertOne({course_id: args.course_id, sender_name: args.sender_name, sender_email: args.sender_email, message: args.message, created_at: new Date()});
                     const reply = await getReplyToChat(chat_history, user_context, last_message);
                     collection.insertOne({course_id: args.course_id, sender_name: "Assistant", sender_email: "", message: reply, created_at: new Date()}); 
