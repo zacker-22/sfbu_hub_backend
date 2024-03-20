@@ -62,7 +62,6 @@ export async function getLocationFromText(raw_text)  {
 
 export async function getReplyToChat(chats, user_context, last_message){
     const openai = new OpenAI(process.env.OPENAI_API_KEY);
-    console.log('chat', chat);
 
     let chat_history = []
     for(let chat of chats){
