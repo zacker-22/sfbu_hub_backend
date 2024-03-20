@@ -285,10 +285,10 @@ export const resolvers = {
                     let user_context = "User: " + args.sender_name + " (" + args.sender_email + ")";
                     const last_message = args.message;
                     if (contextCollection.findOne({email: args.sender_email})){
-                        user_context += "\n Courses: " + (await contextCollection.findOne({email: args
-                            .sender_email})).courses;
-                        
-                        user_context += "\n Assignments: " + (await contextCollection.findOne({email: args.sender_email})).assignments;
+                        const courseContext = JSON.stringify((await contextCollection.findOne({email: args.sender_email})).courses);
+                        user_context += "\n Courses: " + courseContext;
+                        const assignmentContext = JSON.stringify((await contextCollection.findOne({email: args.sender_email})).assignments);
+                        user_context += "\n Assignments: " + assignmentContext;
                     }
 
 
