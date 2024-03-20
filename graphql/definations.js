@@ -1,6 +1,7 @@
 import axios from "axios";
 import { updateDB, getAssignments } from "../database/updateDB.js";
 import env from 'dotenv';
+import {getReplyToChat} from 'chatgpt/chatGPT.js'
 env.config();
 
 export const typeDefs = `#graphql
@@ -259,6 +260,17 @@ export const resolvers = {
             try{
                 const database = context.database;
                 const collection = database.collection('chats');
+                if(args.course_id.startsWith("chat_bot")){
+                    
+                    const chat_history = (await collection.find({course_id: args.course_id})).toArray() || [];
+                    const user_context = "User: " + args.sender_name + " (" + args.sender_email + ")";
+                    const last_message = args.message;
+
+                    collection.insertOne({course_id: args.course_id, sender_name: args.sender_name, sender_email: args.sender_email, message: args.message, created_at: new Date()});
+                    const reply = await getReplyToChat(chat_history, user_context, last_message);
+                    collection.insertOne({course_id: args.course_id, sender_name: "Assistant", sender_email: "", message: reply, created_at: new Date()}); 
+                    return {error: false, error_message: "Message sent successfully"};                   
+                }
                 collection.insertOne({course_id: args.course_id, sender_name: args.sender_name, sender_email: args.sender_email, message: args.message, created_at: new Date()});
                 return {error: false, error_message: "Message sent successfully"};
             }

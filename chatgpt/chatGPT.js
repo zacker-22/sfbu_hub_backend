@@ -58,3 +58,36 @@ export async function getLocationFromText(raw_text)  {
 
     return JSON.parse(response.choices[0].message.content);
 }
+
+
+export async function getReplyToChat(chat, user_context, last_message){
+    const openai = new OpenAI(process.env.OPENAI_API_KEY);
+
+    const messageList = [
+        {
+            role: 'system',
+            content: 'You are a personal chatbot assistant. You have the following context: \n' + user_context
+        },
+        {
+            role: 'system',
+            content: 'The user had following chat with you: \n' + chat
+        },
+        {
+            role: 'system',
+            content: 'Reply to the user query given the context and chat history.'
+        },
+        {
+            role: 'user',
+            content: last_message
+        }
+    ];
+
+    
+
+    const response = await openai.chat.completions.create({
+        model: 'gpt-3.5-turbo',
+        messages: messageList,
+    });
+
+    return response.choices[0].message.content;
+}
