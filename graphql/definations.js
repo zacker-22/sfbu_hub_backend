@@ -144,7 +144,7 @@ export const resolvers = {
                 else{
                     contextCollection.insertOne({email: args.email, courses: courses});
                 }
-                
+
 
                 return {error: false, error_message: "", courses: courses};
             }else{
@@ -278,16 +278,26 @@ export const resolvers = {
                 const userCollection = database.collection('users');
                 const user = await userCollection.findOne({email: args.sender_email});
                 const collection = database.collection('chats');
+                const contextCollection = database.collection('context');
                 if(args.course_id.startsWith("chat_bot")){
                     
                     const chat_history = await (await collection.find({course_id: args.course_id})).toArray();
-                    const user_context = "User: " + args.sender_name + " (" + args.sender_email + ")";
+                    let user_context = "User: " + args.sender_name + " (" + args.sender_email + ")";
                     const last_message = args.message;
-                    const canvas_token = user.canvas_token;
-                    if(!canvas_token){
-                        return [];
+                    if (contextCollection.findOne({email: args.sender_email})){
+                        user_context += "\n Courses: " + (await contextCollection.findOne({email: args
+                            .sender_email})).courses;
+                        
+                        user_context += "\n Assignments: " + (await contextCollection.findOne({email: args.sender_email})).assignments;
                     }
-                    const courses = user.courses;
+
+
+
+                    
+                    
+                    
+                    
+
                     collection.insertOne({course_id: args.course_id, sender_name: args.sender_name, sender_email: args.sender_email, message: args.message, created_at: new Date()});
                     const reply = await getReplyToChat(chat_history, user_context, last_message);
                     collection.insertOne({course_id: args.course_id, sender_name: "Assistant", sender_email: "", message: reply, created_at: new Date()}); 
