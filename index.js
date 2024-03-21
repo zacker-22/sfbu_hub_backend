@@ -66,7 +66,7 @@ const server = new ApolloServer({
 });
 
 await server.start();
-app.use('/graphql', cors(), bodyParser.json(), expressMiddleware(server, {
+app.use('/', cors(), bodyParser.json(), expressMiddleware(server, {
     context: async ({ req, res }) => ({
       database: getDatabase(),
      pubsub: pubsub,
