@@ -16,17 +16,46 @@ function getConfig(accessToken, page=1) {
         }
     }
 }
+
+
+function getUserConfig(accessToken, page=1) {
+    return {
+        method: 'get',
+        maxBodyLength: Infinity,
+        url: `https://sfbu.instructure.com/api/v1/users/self`,
+        headers: { 
+        'Authorization': `Bearer ${accessToken}`
+        }
+    }
+}
+
+export const getAssignments = async (accessToken, course_id) => {
+    const response = await axios.get(`https://sfbu.instructure.com/api/v1/courses/${course_id}/assignments`, {
+        headers: {
+            'Authorization': `Bearer ${accessToken}`
+        }
+    });
+    return response.data;
+}
+
+
   
  
 
-export const updateDB = async () => {
+export const updateDB = async (oneUser = null) => {
     const database = getDatabase();
     const courseCollection = database.collection('courses');
     const userCollection = database.collection('users');
-    const users = await userCollection.find().toArray();
+
+    const users = oneUser == null ?  await userCollection.find().toArray() : await userCollection.find({email: oneUser.email}).toArray();
+
+    console.log(users);
+    
     const cacheCollection = database.collection('cache');
     for(const user of users){
+        
         if(user.canvas_token){
+            console.log("updating user: ", user.email);
             let page = 1;
             let courses = [];
             let response = null;
@@ -39,6 +68,7 @@ export const updateDB = async () => {
                 userCollection.updateOne({_id: user._id}, {$unset: {canvas_token : ""} });
             }
             
+
 
             if(response == null){
                 continue;
@@ -63,34 +93,41 @@ export const updateDB = async () => {
       
                 let scheduleText = soup.text.substring(schedule, schedule + 100);
                 let locationText = soup.text.substring(location, location + 100);
-                console.log(course.name);
-                console.log(scheduleText);
-                console.log(locationText);
 
                 let scheduleJson = await cacheCollection.findOne({query: scheduleText});
                 let locationJson = await cacheCollection.findOne({query: locationText});
 
-                if(scheduleJson == null){
+                scheduleJson = scheduleJson?.result;
+                locationJson = locationJson?.result;
+
+
+                if(scheduleJson === null || scheduleJson === undefined || scheduleJson.time1 == null || scheduleJson.time2 == null || scheduleJson.day == null){
                     scheduleJson = await getDateTimeFromText(scheduleText);
                     cacheCollection.insertOne({query: scheduleText, result: scheduleJson});
                 }
-                if(locationJson == null){
+                if(locationJson === null || locationJson === undefined){
                     locationJson = await getLocationFromText(locationText);
                     cacheCollection.insertOne({query: locationText, result: locationJson});
                 }
 
-                courseCollection.updateOne({id: course.id}, {$set: {
+
+                await courseCollection.updateOne({id: course.id}, {$set: {
                     id: course.id,
                     name: course.name,
                     is_public: course.is_public,
-                    schedule_day: scheduleJson.day,
-                    schedule_time1: scheduleJson.time1,
-                    schedule_time2: scheduleJson.time2,
-                    location: locationJson.location,
+                    schedule_day: scheduleJson?.day ?? null,
+                    schedule_time1: scheduleJson?.time1 ?? null ,
+                    schedule_time2: scheduleJson?.time2 ?? null,
+                    location: locationJson?.location,
                 }}, {upsert: true});
+
+                
             }
-            
-            userCollection.updateOne({_id: user._id}, {$set: {courses: courses.map(course => course.id)}});
+
+            const userDetail = await axios(getUserConfig(user.canvas_token));
+
+
+            userCollection.updateOne({_id: user._id}, {$set: {courses: courses.map(course => course.id), name: userDetail.data.name, short_name: userDetail.data.short_name}});
         }
     }
 }
