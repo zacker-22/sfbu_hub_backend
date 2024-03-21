@@ -2,6 +2,7 @@ import axios from "axios";
 import { updateDB, getAssignments } from "../database/updateDB.js";
 import env from 'dotenv';
 import {getReplyToChat} from '../chatgpt/chatGPT.js'
+
 env.config();
 
 export const typeDefs = `#graphql
@@ -86,7 +87,21 @@ export const typeDefs = `#graphql
         addChatMessage(course_id: String!, sender_name: String!, sender_email: String!, message: String!): LoginResponse
         markChatRead(email: String!, course_id: String!): Boolean
     }    
+
+    type Subscription {
+        getChatMessages(course_id: String!): [ChatMessage]
+    }
 `;
+
+const subscribers = {};
+const onMessageUpdates = (fn, id) => {
+    if(id in subscribers){
+        subscribers[id].push(fn);
+    }else{
+        subscribers[id] = [fn];
+    }
+    console.log(subscribers);
+}
 
 
 export const resolvers = {
@@ -274,11 +289,12 @@ export const resolvers = {
         },
         addChatMessage: async (parent, args, context, info) => {
             try{
+
                 const database = context.database;
-                const userCollection = database.collection('users');
-                const user = await userCollection.findOne({email: args.sender_email});
                 const collection = database.collection('chats');
                 const contextCollection = database.collection('context');
+
+
                 if(args.course_id.startsWith("chat_bot")){
                     
                     const chat_history = await (await collection.find({course_id: args.course_id})).toArray();
@@ -291,22 +307,21 @@ export const resolvers = {
                         user_context += "\n Assignments: " + assignmentContext;
                     }
 
-
-
-                    
-                    
-                    
-                    
-
                     collection.insertOne({course_id: args.course_id, sender_name: args.sender_name, sender_email: args.sender_email, message: args.message, created_at: new Date()});
                     const reply = await getReplyToChat(chat_history, user_context, last_message);
                     collection.insertOne({course_id: args.course_id, sender_name: "Assistant", sender_email: "", message: reply, created_at: new Date()}); 
                     return {error: false, error_message: "Message sent successfully"};                   
                 }
                 collection.insertOne({course_id: args.course_id, sender_name: args.sender_name, sender_email: args.sender_email, message: args.message, created_at: new Date()});
+
+                if(args.course_id in subscribers){
+                    subscribers[args.course_id].forEach(fn => fn());
+                }
+                
                 return {error: false, error_message: "Message sent successfully"};
             }
             catch(err){
+                console.log(err);
                 return {error: true, error_message: "Error in sending message"};
             }
         },
@@ -323,6 +338,34 @@ export const resolvers = {
                 collection.insertOne({email: args.email, course_id: args.course_id, count: chatCount});
             }
             return true;
+        }
+    },
+    Subscription: {
+        getChatMessages: {
+            subscribe: (parent, args, context, info) => {
+                // console.log(context);
+                const database = context.database;
+                const collection = database.collection('chats');
+                const channel = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+
+                subscribers[args.course_id] = subscribers[args.course_id] || [];
+                subscribers[args.course_id].push(() => {
+                    context.pubsub.publish(channel, { getChatMessages: (async () => {
+                        return await collection.find({course_id: args.course_id}).toArray();
+                    }
+                    )() });
+                }
+                );
+
+                
+                setTimeout(() => {
+                    context.pubsub.publish(channel, { getChatMessages: (async () => {
+                        return await collection.find({course_id: args.course_id}).toArray();
+                    }
+                    )() });
+                }, 0);
+                return context.pubsub.asyncIterator(channel);
+            }
         }
     }
 };
