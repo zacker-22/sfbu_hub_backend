@@ -39,7 +39,7 @@ const httpServer = createServer(app);
 // Set up WebSocket server.
 const wsServer = new WebSocketServer({
   server: httpServer,
-  path: '/graphql',
+  path: '/',
 });
 const serverCleanup = useServer({ schema, context: ({ req }) => ({ database: getDatabase(), pubsub: pubsub, req }) }, wsServer);
 
