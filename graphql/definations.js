@@ -354,6 +354,9 @@ export const resolvers = {
                 collection.deleteMany({course_id: chatRead.course_id});
             }
             chatReadCollection.deleteMany({course_id: args.course_id});
+            if(args.course_id in subscribers){
+                subscribers[args.course_id].forEach(fn => fn());
+            }
             return true;
         }
     },
