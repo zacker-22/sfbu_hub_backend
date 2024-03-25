@@ -309,9 +309,6 @@ export const resolvers = {
                     }
 
                     collection.insertOne({course_id: args.course_id, sender_name: args.sender_name, sender_email: args.sender_email, message: args.message, created_at: new Date()});
-                    if(args.course_id in subscribers){
-                        subscribers[args.course_id].forEach(fn => fn());
-                    }
                     const reply = await getReplyToChat(chat_history, user_context, last_message);
                     await collection.insertOne({course_id: args.course_id, sender_name: "Assistant", sender_email: "", message: reply, created_at: new Date()}); 
                     if(args.course_id in subscribers){
