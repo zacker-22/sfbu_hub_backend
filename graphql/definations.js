@@ -86,6 +86,7 @@ export const typeDefs = `#graphql
         setCanvasToken(email: String!, token: String!, canvas_token: String!): LoginResponse
         addChatMessage(course_id: String!, sender_name: String!, sender_email: String!, message: String!): LoginResponse
         markChatRead(email: String!, course_id: String!): Boolean
+        clearChat(course_id: String!): Boolean
     }    
 
     type Subscription {
@@ -342,6 +343,17 @@ export const resolvers = {
             else{
                 collection.insertOne({email: args.email, course_id: args.course_id, count: chatCount});
             }
+            return true;
+        },
+        clearChat: async (parent, args, context, info) => {
+            const database = context.database;
+            const collection = database.collection('chats');
+            const chatReadCollection = database.collection('chat_reads');
+            const chatReads = await chatReadCollection.find({course_id: args.course_id}).toArray();
+            for(let chatRead of chatReads){
+                collection.deleteMany({course_id: chatRead.course_id});
+            }
+            chatReadCollection.deleteMany({course_id: args.course_id});
             return true;
         }
     },
