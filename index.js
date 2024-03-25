@@ -12,6 +12,7 @@ import { useServer } from 'graphql-ws/lib/use/ws';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import { expressMiddleware } from '@apollo/server/express4';
+import { updateDB } from './database/updateDB.js';
 
 
 
@@ -25,7 +26,7 @@ process.setMaxListeners(0);
 await connectToDatabase();
 
 // cron.schedule('* 2 * * *', async () => {
-// await updateDB();
+await updateDB();
 // });
 // await updateDB();
 

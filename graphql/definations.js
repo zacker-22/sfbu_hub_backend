@@ -309,11 +309,13 @@ export const resolvers = {
 
                     collection.insertOne({course_id: args.course_id, sender_name: args.sender_name, sender_email: args.sender_email, message: args.message, created_at: new Date()});
                     const reply = await getReplyToChat(chat_history, user_context, last_message);
-                    collection.insertOne({course_id: args.course_id, sender_name: "Assistant", sender_email: "", message: reply, created_at: new Date()}); 
+                    await collection.insertOne({course_id: args.course_id, sender_name: "Assistant", sender_email: "", message: reply, created_at: new Date()}); 
+                    if(args.course_id in subscribers){
+                        subscribers[args.course_id].forEach(fn => fn());
+                    }
                     return {error: false, error_message: "Message sent successfully"};                   
                 }
-                collection.insertOne({course_id: args.course_id, sender_name: args.sender_name, sender_email: args.sender_email, message: args.message, created_at: new Date()});
-
+                await collection.insertOne({course_id: args.course_id, sender_name: args.sender_name, sender_email: args.sender_email, message: args.message, created_at: new Date()});
                 if(args.course_id in subscribers){
                     subscribers[args.course_id].forEach(fn => fn());
                 }
