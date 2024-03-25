@@ -346,10 +346,7 @@ export const resolvers = {
             const database = context.database;
             const collection = database.collection('chats');
             const chatReadCollection = database.collection('chat_reads');
-            const chatReads = await chatReadCollection.find({course_id: args.course_id}).toArray();
-            for(let chatRead of chatReads){
-                collection.deleteMany({course_id: chatRead.course_id});
-            }
+            await collection.deleteMany({course_id: args.course_id});
             chatReadCollection.deleteMany({course_id: args.course_id});
             if(args.course_id in subscribers){
                 subscribers[args.course_id].forEach(fn => fn());
