@@ -65,6 +65,11 @@ export const typeDefs = `#graphql
         is_submitted: Boolean
     }
 
+    type Club {
+        id: String,
+        name: String,
+    }
+
     type ChatReads {
         course_id: String,
         count: Int
@@ -80,6 +85,7 @@ export const typeDefs = `#graphql
         user(email: String!, token: String!): User
         assignments(email: String!, token: String!): [Assignments]
         chatReads(email: String!): [ChatReads]
+        clubs: [Club]
     }
 
     type Mutation {
@@ -261,6 +267,16 @@ export const resolvers = {
                 }
             }
             return chatReads;
+        },
+        clubs: async (parent, args, context, info) => {
+            const database = context.database;
+            const collection = database.collection('clubs');
+            // return unique clubs with ids
+            const result = await collection.aggregate([
+                { $group: { _id: "$id", name: { $first: "$name" }, id: {$first: "$id"} } }
+            ]).toArray();
+            
+            return result || [];
         }
     },
     Course: {
@@ -345,9 +361,7 @@ export const resolvers = {
         clearChat: async (parent, args, context, info) => {
             const database = context.database;
             const collection = database.collection('chats');
-            const chatReadCollection = database.collection('chat_reads');
             await collection.deleteMany({course_id: args.course_id});
-            chatReadCollection.deleteMany({course_id: args.course_id});
             if(args.course_id in subscribers){
                 subscribers[args.course_id].forEach(fn => fn());
             }
