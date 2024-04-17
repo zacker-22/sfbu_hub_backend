@@ -176,9 +176,11 @@ export const resolvers = {
                 console.log(courses);
                 console.log(user);
                 if(contextCollection.findOne({email: args.email})){ 
+                    console.log("updating context");
                     contextCollection.updateOne({email: args.email}, {$set: {courses: courses}});
                 }
                 else{
+                    console.log("inserting context");
                     contextCollection.insertOne({email: args.email, courses: courses});
                 }
 
