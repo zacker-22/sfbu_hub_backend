@@ -298,6 +298,9 @@ export const resolvers = {
             const userCollection = database.collection('users');
             const user = await userCollection.findOne({email: args.email});
             const clubs = user.clubs;
+            if (!clubs){
+                return [];
+            }
             let result = await collection.aggregate([
                 { $group: { _id: "$id", name: { $first: "$name" }, id: {$first: "$id"} } }
             ]).toArray();
@@ -313,6 +316,9 @@ export const resolvers = {
                 return [];
             }
             const clubs = user.clubs;
+            if(!clubs){
+                return [];
+            }
             const collection = database.collection('clubs');
             const result =  await collection.find({id: {$in: clubs}}).toArray();
             console.log(result);
