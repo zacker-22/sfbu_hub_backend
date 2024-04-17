@@ -1,5 +1,3 @@
-import axios from "axios";
-import * as OneSignal from '@onesignal/node-onesignal';
 import { getDatabase } from "../database/database.js";
 
 
@@ -37,9 +35,7 @@ export const sendNotificationToCourse = async (email, courseId, name) => {
     const course = await courseCollection.findOne({id: parseInt(courseId)});
     const courseName = course.name;
     for(const user of users) {
-        console.log(user.email, user.courses && user.courses.includes(parseInt(courseId)));
         if(user.courses && user.courses.includes(parseInt(courseId)) && user.email !== email && user.notification_token) {
-            console.log("Sending notification to: " + user.email);
             sendNotification(`New Message in ${courseName}`, `${name} sent a new message in ${courseName}`, user.notification_token);
         }
     }
