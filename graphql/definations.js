@@ -106,6 +106,7 @@ export const typeDefs = `#graphql
         clearChat(course_id: String!): Boolean
         addClub(email: String!, club_id: String!): Boolean
         removeClub(email: String!, club_id: String!): Boolean
+        addNotificationToken(email: String!, token: String!): Boolean
     }    
 
     type Subscription {
@@ -444,6 +445,16 @@ export const resolvers = {
                     await collection.updateOne({email: args.email}, {$set: {clubs: user.clubs}});
                     return true;
                 }
+            }
+            return false;
+        },
+        addNotificationToken: async (parent, args, context, info) => {
+            const database = context.database;
+            const collection = database.collection('users');
+            const user = await collection.findOne({email: args.email});
+            if(user){
+                await collection.updateOne({email: args.email}, {$set: {notification_token: args.token}});
+                return true;
             }
             return false;
         }  

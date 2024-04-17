@@ -13,6 +13,7 @@ import cors from 'cors';
 import bodyParser from 'body-parser';
 import { expressMiddleware } from '@apollo/server/express4';
 import { updateDB } from './database/updateDB.js';
+import { sendNotificationToCourse } from './notifications/notifications.js';
 
 
 
@@ -25,17 +26,13 @@ process.setMaxListeners(0);
 
 await connectToDatabase();
 
-// cron.schedule('* 2 * * *', async () => {
-// await updateDB();
-// });
-// await updateDB();
-
-// console.log(random.str);
 const pubsub = new PubSub();
 const schema = makeExecutableSchema({ typeDefs, resolvers });
 
 const app = express();
 const httpServer = createServer(app);
+
+sendNotificationToCourse("test", "test");
 
 // Set up WebSocket server.
 const wsServer = new WebSocketServer({
