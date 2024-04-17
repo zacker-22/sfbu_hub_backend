@@ -298,12 +298,10 @@ export const resolvers = {
             const userCollection = database.collection('users');
             const user = await userCollection.findOne({email: args.email});
             const clubs = user.clubs;
-            console.log(clubs);
             let result = await collection.aggregate([
                 { $group: { _id: "$id", name: { $first: "$name" }, id: {$first: "$id"} } }
             ]).toArray();
             result = result.filter(club => clubs.includes(club.id));
-            console.log(result);
             return result || [];
         },
 
@@ -316,14 +314,15 @@ export const resolvers = {
             }
             const clubs = user.clubs;
             const collection = database.collection('clubs');
-            return await collection.find({id: {$in: clubs}}).toArray();
+            const result =  await collection.find({id: {$in: clubs}}).toArray();
+            console.log(result);
+            return result;
         }
     },
     Course: {
         members: async (parent, args, context, info) => {
             const database = context.database;
             const collection = database.collection('users');
-            console.log(parent);
             return (await collection.find( {courses : parseInt(parent.id), canvas_token: {$exists : true} } )).toArray() || [];
         }
 
