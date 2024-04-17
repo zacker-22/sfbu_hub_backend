@@ -105,6 +105,7 @@ export const typeDefs = `#graphql
         markChatRead(email: String!, course_id: String!): Boolean
         clearChat(course_id: String!): Boolean
         addClub(email: String!, club_id: String!): Boolean
+        removeClub(email: String!, club_id: String!): Boolean
     }    
 
     type Subscription {
@@ -420,6 +421,19 @@ export const resolvers = {
                 }
                 await collection.updateOne({email: args.email}, {$set: {clubs: user.clubs}});
                 return true;
+            }
+            return false;
+        },
+        removeClub: async (parent, args, context, info) => {
+            const database = context.database;
+            const collection = database.collection('users');
+            const user = await collection.findOne({email: args.email});
+            if(user){
+                if(user.clubs){
+                    user.clubs = user.clubs.filter(club => club != args.club_id);
+                    await collection.updateOne({email: args.email}, {$set: {clubs: user.clubs}});
+                    return true;
+                }
             }
             return false;
         }  
