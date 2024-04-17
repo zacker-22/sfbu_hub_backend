@@ -32,7 +32,7 @@ const schema = makeExecutableSchema({ typeDefs, resolvers });
 const app = express();
 const httpServer = createServer(app);
 
-sendNotificationToCourse("test", "test");
+sendNotificationToCourse("ssimhadr379@student.sfbu.edu", "561", "Siddharth");
 
 // Set up WebSocket server.
 const wsServer = new WebSocketServer({

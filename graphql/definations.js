@@ -2,6 +2,7 @@ import axios from "axios";
 import { updateDB, getAssignments } from "../database/updateDB.js";
 import env from 'dotenv';
 import {getReplyToChat} from '../chatgpt/chatGPT.js'
+import { sendNotificationToCourse } from "../notifications/notifications.js";
 
 env.config();
 
@@ -382,6 +383,8 @@ export const resolvers = {
                         subscribers[args.course_id].forEach(fn => fn());
                     }
                     return {error: false, error_message: "Message sent successfully"};                   
+                }else{
+                    sendNotificationToCourse(args.sender_email, args.course_id, args.sender_name);
                 }
                 await collection.insertOne({course_id: args.course_id, sender_name: args.sender_name, sender_email: args.sender_email, message: args.message, created_at: new Date()});
                 if(args.course_id in subscribers){
