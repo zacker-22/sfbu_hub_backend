@@ -173,6 +173,8 @@ export const resolvers = {
             
             if(user){
                 const courses = await collection.find({id: {$in: user.courses}}).toArray();
+                console.log(courses);
+                console.log(user);
                 if(contextCollection.findOne({email: args.email})){ 
                     contextCollection.updateOne({email: args.email}, {$set: {courses: courses}});
                 }
