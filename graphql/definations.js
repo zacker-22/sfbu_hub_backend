@@ -75,6 +75,15 @@ export const typeDefs = `#graphql
         count: Int
     }
 
+    type Event {
+        id: String,
+        name: String,
+        info: String,
+        date: String,
+        time: String,
+        location: String
+    }
+
     type Query {
         otpRequest(email: String!): LoginResponse
         login(email: String!, otp: String!): LoginResponse
@@ -86,6 +95,8 @@ export const typeDefs = `#graphql
         assignments(email: String!, token: String!): [Assignments]
         chatReads(email: String!): [ChatReads]
         clubs: [Club]
+        getClubsforUser(email: String!): [Club]
+        getEvents(email: String!): [Event]
     }
 
     type Mutation {
@@ -93,6 +104,7 @@ export const typeDefs = `#graphql
         addChatMessage(course_id: String!, sender_name: String!, sender_email: String!, message: String!): LoginResponse
         markChatRead(email: String!, course_id: String!): Boolean
         clearChat(course_id: String!): Boolean
+        addClub(email: String!, club_id: String!): Boolean
     }    
 
     type Subscription {
@@ -275,8 +287,35 @@ export const resolvers = {
             const result = await collection.aggregate([
                 { $group: { _id: "$id", name: { $first: "$name" }, id: {$first: "$id"} } }
             ]).toArray();
-            
+
             return result || [];
+        },
+
+        getClubsforUser: async (parent, args, context, info) => {
+            const database = context.database;
+            const collection = database.collection('clubs');
+            const userCollection = database.collection('users');
+            const user = await userCollection.findOne({email: args.email});
+            const clubs = user.clubs;
+            console.log(clubs);
+            let result = await collection.aggregate([
+                { $group: { _id: "$id", name: { $first: "$name" }, id: {$first: "$id"} } }
+            ]).toArray();
+            result = result.filter(club => clubs.includes(club.id));
+            console.log(result);
+            return result || [];
+        },
+
+        getEvents: async (parent, args, context, info) => {
+            const database = context.database;
+            const userCollection = database.collection('users');
+            const user = await userCollection.findOne({email: args.email});
+            if(!user){
+                return [];
+            }
+            const clubs = user.clubs;
+            const collection = database.collection('clubs');
+            return await collection.find({id: {$in: clubs}}).toArray();
         }
     },
     Course: {
@@ -366,7 +405,24 @@ export const resolvers = {
                 subscribers[args.course_id].forEach(fn => fn());
             }
             return true;
-        }
+        },
+        addClub: async (parent, args, context, info) => {
+            const database = context.database;
+            const collection = database.collection('users');
+            const user = await collection.findOne({email: args.email});
+            if(user){
+                if(user.clubs){
+                    if(!user.clubs.includes(args.club_id)){
+                        user.clubs.push(args.club_id);
+                    }
+                }else{
+                    user.clubs = [args.club_id];
+                }
+                await collection.updateOne({email: args.email}, {$set: {clubs: user.clubs}});
+                return true;
+            }
+            return false;
+        }  
     },
     Subscription: {
         getChatMessages: {
